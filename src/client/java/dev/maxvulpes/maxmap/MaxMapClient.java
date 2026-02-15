@@ -23,7 +23,7 @@ import org.lwjgl.glfw.GLFW;
 import java.util.HashSet;
 import java.util.Set;
 
-public class MapCoverageTrackerClient implements ClientModInitializer {
+public class MaxMapClient implements ClientModInitializer {
     private static KeyMapping configKey;
     private static final Set<Integer> seenMapIds = new HashSet<>();
 

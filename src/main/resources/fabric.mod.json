@@ -1,6 +1,6 @@
 {
 	"schemaVersion": 1,
-	"id": "mapcoveragetracker",
+	"id": "maxmap",
 	"version": "${version}",
 	"name": "MaxMap",
   "authors": ["MaxVulpes"],
@@ -11,20 +11,20 @@
 		"sources": ""
 	},
 	"license": "CC0-1.0",
-	"icon": "assets/mapcoveragetracker/icon.png",
+	"icon": "assets/maxmap/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"dev.fweigel.MapCoverageTracker"
+			"dev.maxvulpes.maxmap.MapCoverageTracker"
 		],
 		"client": [
-			"dev.fweigel.MapCoverageTrackerClient"
+			"dev.maxvulpes.maxmap.MapCoverageTrackerClient"
 		]
 	},
 	"mixins": [
-		"mapcoveragetracker.mixins.json",
+		"maxmap.mixins.json",
 		{
-			"config": "mapcoveragetracker.client.mixins.json",
+			"config": "maxmap.client.mixins.json",
 			"environment": "client"
 		}
 	],

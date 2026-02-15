@@ -1,4 +1,4 @@
-package maxvulpes.maxmap;
+package dev.maxvulpes.maxmap;
 
 import net.minecraft.core.BlockPos;
 import org.junit.jupiter.api.Test;

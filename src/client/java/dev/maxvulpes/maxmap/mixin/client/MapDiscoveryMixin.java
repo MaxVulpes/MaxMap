@@ -1,6 +1,6 @@
-package maxvulpes.maxmap.mixin.client;
+package dev.maxvulpes.maxmap.mixin.client;
 
-import maxvulpes.maxmap.MapCoverageManager;
+import dev.maxvulpes.maxmap.MapCoverageManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;

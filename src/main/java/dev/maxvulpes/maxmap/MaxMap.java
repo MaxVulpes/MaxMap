@@ -1,4 +1,4 @@
-package maxvulpes.maxmap;
+package dev.maxvulpes.maxmap;
 
 import net.fabricmc.api.ModInitializer;
 
@@ -11,6 +11,6 @@ public class MaxMap implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        LOGGER.info("Map Coverage Tracker initialized");
+        LOGGER.info("MaxMap initialized");
     }
 }

@@ -1,8 +1,9 @@
-package maxvulpes.maxmap.ui;
+package dev.maxvulpes.maxmap.ui;
 
-import maxvulpes.maxmap.MapCoverageManager;
-import maxvulpes.maxmap.MapCoverageState;
-import maxvulpes.maxmap.MapCoverageExporter;
+import dev.maxvulpes.maxmap.MaxMap;
+import dev.maxvulpes.maxmap.MapCoverageManager;
+import dev.maxvulpes.maxmap.MapCoverageState;
+import dev.maxvulpes.maxmap.MapCoverageExporter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -98,7 +99,7 @@ public class MapConfigScreen extends Screen {
                 notifyExportResult(MapCoverageExporter.exportHtml(this.minecraft));
             } catch (Exception e) {
                 notifyExportResult(null);
-                maxvulpes.maxmap.MapCoverageTracker.LOGGER.error("Failed to export map coverage", e);
+                MaxMap.LOGGER.error("Failed to export map coverage", e);
             }
         }).bounds(formCenterX - 50, centerY + 140, 100, 20).build());
 

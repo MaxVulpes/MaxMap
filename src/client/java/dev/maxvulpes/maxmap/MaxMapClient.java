@@ -1,7 +1,8 @@
-package maxvulpes.maxmap;
+package dev.maxvulpes.maxmap;
 
-import maxvulpes.maxmap.ui.MapConfigScreen;
-import maxvulpes.maxmap.ui.MapOverlayRenderer;
+import dev.maxvulpes.maxmap.MaxMap;
+import dev.maxvulpes.maxmap.ui.MapConfigScreen;
+import dev.maxvulpes.maxmap.ui.MapOverlayRenderer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -72,7 +73,7 @@ public class MaxMapClient implements ClientModInitializer {
 
     private static KeyMapping registerConfigKey() {
         KeyMapping.Category keyCategory = KeyMapping.Category.register(
-                Identifier.fromNamespaceAndPath(MapCoverageTracker.MOD_ID, "general"));
+                Identifier.fromNamespaceAndPath(MaxMap.MOD_ID, "general"));
         return KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 "key.maxmap.config",
                 GLFW.GLFW_KEY_M,

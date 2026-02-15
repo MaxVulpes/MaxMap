@@ -1,4 +1,4 @@
-package maxvulpes.maxmap.mixin.client;
+package dev.maxvulpes.maxmap.mixin.client;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;

@@ -1,12 +1,16 @@
-package maxvulpes.maxmap.ui;
+package dev.maxvulpes.maxmap.ui;
 
-import maxvulpes.maxmap.MapCoverageManager;
-import maxvulpes.maxmap.AutoMapController;
+
+import dev.maxvulpes.maxmap.AutoMapController;
+import dev.maxvulpes.maxmap.MapCoverageManager;
+
+import dev.maxvulpes.maxmap.MapCoverageManager;
+import dev.maxvulpes.maxmap.AutoMapController;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.BlockPos;
-import maxvulpes.maxmap.MapCoverageState;
+import dev.maxvulpes.maxmap.MapCoverageState;
 
 public final class MapOverlayRenderer {
     private MapOverlayRenderer() {
@@ -68,7 +72,7 @@ public final class MapOverlayRenderer {
 CoverageMapRenderer.render(graphics, minecraft, minecraft.font, panelLeft, panelTop, panelRight, panelBottom, -1, -1, false, false);
 
         // --- Auto-map HUD status ---
-        if (maxvulpes.maxmap.MapCoverageManager.isAutoMapEnabled()) {
+        if (MapCoverageManager.isAutoMapEnabled()) {
             // small indicator near overlay (top-right)
             graphics.drawString(minecraft.font,
                     net.minecraft.network.chat.Component.literal("A"),
@@ -78,7 +82,7 @@ CoverageMapRenderer.render(graphics, minecraft, minecraft.font, panelLeft, panel
                     false);
         }
 
-        if (maxvulpes.maxmap.AutoMapController.getInventoryFullWarnTicks() > 0) {
+        if (AutoMapController.getInventoryFullWarnTicks() > 0) {
             String msg = "Auto-map paused: Inventory full";
             int x = (screenWidth - minecraft.font.width(msg)) / 2;
             int y = screenHeight - 60; // above hotbar

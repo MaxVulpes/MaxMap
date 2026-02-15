@@ -1,8 +1,8 @@
-package maxvulpes.maxmap.ui;
+package dev.maxvulpes.maxmap.ui;
 
-import maxvulpes.maxmap.MapCoverageManager;
-import maxvulpes.maxmap.MapCoverageState;
-import maxvulpes.maxmap.MapCoverageTracker;
+import dev.maxvulpes.maxmap.MapCoverageManager;
+import dev.maxvulpes.maxmap.MapCoverageState;
+import dev.maxvulpes.maxmap.MaxMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -285,7 +285,7 @@ if (drawLegend) {
                     texture.close();
                 }
                 texture = new DynamicTexture(() -> "coverage_grid", image);
-                textureId = Identifier.fromNamespaceAndPath(MapCoverageTracker.MOD_ID, "coverage_grid");
+                textureId = Identifier.fromNamespaceAndPath(MaxMap.MOD_ID, "coverage_grid");
                 minecraft.getTextureManager().register(textureId, texture);
             } else {
                 texture.setPixels(image);

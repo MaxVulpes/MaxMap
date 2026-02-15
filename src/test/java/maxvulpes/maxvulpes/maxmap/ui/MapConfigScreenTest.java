@@ -1,6 +1,6 @@
-package maxvulpes.maxmap.ui;
+package dev.maxvulpes.maxmap.ui;
 
-import maxvulpes.maxmap.MapCoverageManager;
+import dev.maxvulpes.maxmap.MapCoverageManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import org.junit.jupiter.api.AfterEach;

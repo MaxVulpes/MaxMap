@@ -1,5 +1,6 @@
-package maxvulpes.maxmap;
+package dev.maxvulpes.maxmap;
 
+import dev.maxvulpes.maxmap.MaxMap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
@@ -39,7 +40,7 @@ public final class MapCoverageStorage {
                 GSON.toJson(state, writer);
             }
         } catch (IOException e) {
-            MapCoverageTracker.LOGGER.error("Failed to save map coverage data to {}", activeSaveFile, e);
+            MaxMap.LOGGER.error("Failed to save map coverage data to {}", activeSaveFile, e);
         }
     }
 
@@ -51,7 +52,7 @@ public final class MapCoverageStorage {
         try {
             Files.deleteIfExists(activeSaveFile);
         } catch (IOException e) {
-            MapCoverageTracker.LOGGER.error("Failed to delete map coverage save {}", activeSaveFile, e);
+            MaxMap.LOGGER.error("Failed to delete map coverage save {}", activeSaveFile, e);
         }
     }
 
@@ -77,7 +78,7 @@ public final class MapCoverageStorage {
         try (Reader reader = Files.newBufferedReader(activeSaveFile)) {
             return GSON.fromJson(reader, MapCoverageState.class);
         } catch (IOException | JsonSyntaxException e) {
-            MapCoverageTracker.LOGGER.error("Failed to read map coverage data from {}", activeSaveFile, e);
+            MaxMap.LOGGER.error("Failed to read map coverage data from {}", activeSaveFile, e);
             return null;
         }
     }

@@ -1,6 +1,6 @@
-package maxvulpes.maxmap;
+package dev.maxvulpes.maxmap;
 
-import maxvulpes.maxmap.ui.MapOverlayRenderer;
+import dev.maxvulpes.maxmap.ui.MapOverlayRenderer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.Minecraft;
 

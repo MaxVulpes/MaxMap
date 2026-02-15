@@ -3,7 +3,7 @@ from pathlib import Path
 import re
 import sys
 
-path = Path("src/client/java/dev/fweigel/ui/CoverageMapRenderer.java")
+path = Path("src/client/java/dev/maxvulpes/maxmap/ui/CoverageMapRenderer.java")
 src = path.read_text(encoding="utf-8")
 
 orig = src
@@ -70,7 +70,7 @@ inject = r"""
                 texture.close();
             }
             texture = new DynamicTexture(nextWidth, nextHeight, true);
-            textureId = minecraft.getTextureManager().register("mapcoveragetracker_grid", texture);
+            textureId = minecraft.getTextureManager().register("maxmap_grid", texture);
             width = nextWidth;
             height = nextHeight;
         }

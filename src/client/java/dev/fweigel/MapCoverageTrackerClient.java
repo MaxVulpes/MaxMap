@@ -62,7 +62,9 @@ public class MapCoverageTrackerClient implements ClientModInitializer {
             boolean shouldScan = MapCreationTracker.hasPending() || client.player.tickCount % 5 == 0;
             if (shouldScan) {
                 handleInventoryMaps(client);
-            }
+            
+            AutoMapController.tick(client);
+}
         });
 
         HudRenderCallback.EVENT.register(MapOverlayRenderer::render);

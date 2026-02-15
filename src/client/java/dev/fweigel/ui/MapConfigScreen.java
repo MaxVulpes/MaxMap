@@ -1,12 +1,15 @@
 package dev.fweigel.ui;
 
 import dev.fweigel.MapCoverageManager;
+import dev.fweigel.MapCoverageState;
 import dev.fweigel.MapCoverageExporter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
@@ -20,6 +23,11 @@ public class MapConfigScreen extends Screen {
     private EditBox z2Field;
     private static final List<String> COORDINATE_LABELS = List.of("Start X", "Start Z", "End X", "End Z");
     private Button overlayToggleButton;
+    private int lastGuiMouseX;
+    private int lastGuiMouseY;
+
+    private CellSizeSlider configCellSlider;
+    private CellSizeSlider overlayCellSlider;
 
     public MapConfigScreen() {
         super(Component.literal("Map Coverage Configuration"));
@@ -28,7 +36,7 @@ public class MapConfigScreen extends Screen {
     @Override
     protected void init() {
         int formCenterX = this.width / 4;
-        int centerY = this.height / 2 - 20;
+        int centerY = this.height / 2 - 45;
 
         x1Field = new EditBox(this.font, formCenterX - 105, centerY - 60, 100, 20, Component.literal("X1"));
         z1Field = new EditBox(this.font, formCenterX + 5, centerY - 60, 100, 20, Component.literal("Z1"));
@@ -75,6 +83,16 @@ public class MapConfigScreen extends Screen {
         }).bounds(formCenterX - 50, centerY + 80, 100, 20).build();
         this.addRenderableWidget(overlayToggleButton);
 
+        
+
+        Button autoMapToggleButton = Button.builder(
+                Component.literal("Auto-map: " + (MapCoverageManager.isAutoMapEnabled() ? "ON" : "OFF")),
+                button -> {
+                    MapCoverageManager.toggleAutoMap();
+                    button.setMessage(Component.literal("Auto-map: " + (MapCoverageManager.isAutoMapEnabled() ? "ON" : "OFF")));
+                }
+        ).bounds(formCenterX - 50, centerY + 110, 100, 20).build();
+        this.addRenderableWidget(autoMapToggleButton);
         this.addRenderableWidget(Button.builder(Component.literal("Export HTML"), button -> {
             try {
                 notifyExportResult(MapCoverageExporter.exportHtml(this.minecraft));
@@ -82,7 +100,34 @@ public class MapConfigScreen extends Screen {
                 notifyExportResult(null);
                 dev.fweigel.MapCoverageTracker.LOGGER.error("Failed to export map coverage", e);
             }
-        }).bounds(formCenterX - 50, centerY + 110, 100, 20).build());
+        }).bounds(formCenterX - 50, centerY + 140, 100, 20).build());
+
+        // Sliders (under Export HTML)
+        int sliderX = formCenterX - 90;
+        int sliderW = 180;
+
+        configCellSlider = new CellSizeSlider(
+                sliderX,
+                centerY + 170,
+                sliderW,
+                20,
+                "Config cell",
+                () -> MapCoverageState.configCellSize,
+                v -> MapCoverageState.configCellSize = v
+        );
+        this.addRenderableWidget(configCellSlider);
+
+        overlayCellSlider = new CellSizeSlider(
+                sliderX,
+                centerY + 194,
+                sliderW,
+                20,
+                "Overlay cell",
+                () -> MapCoverageState.overlayCellSize,
+                v -> MapCoverageState.overlayCellSize = v
+        );
+        this.addRenderableWidget(overlayCellSlider);
+
     }
 
     private void applyInputs() {
@@ -104,6 +149,9 @@ public class MapConfigScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+        this.lastGuiMouseX = mouseX;
+        this.lastGuiMouseY = mouseY;
+
         graphics.fillGradient(0, 0, this.width, this.height, 0xC0101010, 0xD0101010);
         super.render(graphics, mouseX, mouseY, delta);
 
@@ -184,4 +232,116 @@ public class MapConfigScreen extends Screen {
 
         mc.player.displayClientMessage(Component.literal("Exported map grid to " + exportPath.toAbsolutePath()), false);
     }
+
+    private static class CellSizeSlider extends AbstractSliderButton {
+        private static final int MIN = 1;
+        private static final int MAX = 28; // matcher GRID_MAX_CELL
+
+        private final String label;
+        private final java.util.function.IntSupplier getter;
+        private final java.util.function.IntConsumer setter;
+
+        CellSizeSlider(int x, int y, int w, int h, String label,
+                       java.util.function.IntSupplier getter,
+                       java.util.function.IntConsumer setter) {
+            super(x, y, w, h, Component.empty(), toSlider(clamp(getter.getAsInt())));
+            this.label = label;
+            this.getter = getter;
+            this.setter = setter;
+            updateMessage();
+        }
+
+        int getCellSize() {
+            int v = (int) Math.round(MIN + this.value * (MAX - MIN));
+            return clamp(v);
+        }
+
+        @Override
+        protected void updateMessage() {
+            this.setMessage(Component.literal(label + ": " + getCellSize()));
+        }
+
+        @Override
+        protected void applyValue() {
+            setter.accept(getCellSize());
+        }
+
+        @Override
+        public void renderWidget(GuiGraphics g, int mx, int my, float dt) {
+            int cur = clamp(getter.getAsInt());
+            double want = toSlider(cur);
+            if (Math.abs(this.value - want) > 1e-9) this.value = want;
+            super.renderWidget(g, mx, my, dt);
+        }
+
+        private static int clamp(int v) {
+            if (v < MIN) return MIN;
+            if (v > MAX) return MAX;
+            return v;
+        }
+
+        private static double toSlider(int cell) {
+            cell = clamp(cell);
+            return (cell - MIN) / (double) (MAX - MIN);
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    @Override
+    public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+        if (super.mouseClicked(event, isDoubleClick)) return true;
+        if (this.minecraft == null || this.minecraft.getWindow() == null) return false;
+
+        // RAW mouse (pixels) -> GUI coords (samme system som render(mouseX,mouseY))
+        double rawX = this.minecraft.mouseHandler.xpos();
+        double rawY = this.minecraft.mouseHandler.ypos();
+
+        int winW = this.minecraft.getWindow().getWidth();
+        int winH = this.minecraft.getWindow().getHeight();
+        int guiW = this.minecraft.getWindow().getGuiScaledWidth();
+        int guiH = this.minecraft.getWindow().getGuiScaledHeight();
+
+        if (winW <= 0 || winH <= 0) return false;
+
+        double mx = rawX * (double) guiW / (double) winW;
+        double my = rawY * (double) guiH / (double) winH;
+
+        int panelLeft = this.width / 2 + CoverageMapRenderer.GRID_MARGIN;
+        int panelTop = 40;
+        int panelRight = this.width - CoverageMapRenderer.GRID_MARGIN;
+        int panelBottom = this.height - CoverageMapRenderer.GRID_MARGIN;
+
+        CoverageMapRenderer.HitCell hit = CoverageMapRenderer.hitTestCell(
+                this.minecraft,
+                this.font,
+                panelLeft, panelTop, panelRight, panelBottom,
+                mx, my,
+                true
+        );
+        if (hit == null) return false;
+
+        int button = event.button();
+        if (button == 0) {
+            MapCoverageManager.toggleMapped(hit.centerX(), hit.centerZ());
+            return true;
+        }
+        if (button == 1) {
+            MapCoverageManager.toggleForcedMapped(hit.centerX(), hit.centerZ());
+            return true;
+        }
+        return false;
+    }
+
 }

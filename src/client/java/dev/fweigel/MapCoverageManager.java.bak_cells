@@ -17,7 +17,6 @@ public class MapCoverageManager {
     private static BlockPos targetStart = null;
     private static BlockPos targetEnd = null;
     private static boolean overlayEnabled = false;
-    private static boolean autoMapEnabled = false;
     private static boolean isLoadingState = false;
     private static long coverageVersion = 0;
     private static long targetVersion = 0;
@@ -50,21 +49,7 @@ public class MapCoverageManager {
         return overlayEnabled && hasTarget();
     }
 
-    
-
-    public static boolean isAutoMapEnabled() {
-        return autoMapEnabled;
-    }
-
-    public static void setAutoMapEnabled(boolean enabled) {
-        autoMapEnabled = enabled;
-        saveState();
-    }
-
-    public static void toggleAutoMap() {
-        setAutoMapEnabled(!autoMapEnabled);
-    }
-public static void toggleOverlay() {
+    public static void toggleOverlay() {
         overlayEnabled = !overlayEnabled && hasTarget();
         saveState();
     }
@@ -420,24 +405,15 @@ public static void clearForcedMapped() {
         }
     }
 
-    // UI tuning (cell sizes)
-    private static int overlayCellSize = 2; // pinned overlay
-    private static int configCellSize = 6;  // config screen
+    // Overlay tuning (UI)
+    private static int overlayMinCell = 2;
 
     public static int getOverlayMinCell() {
-        return overlayCellSize;
+        return overlayMinCell;
     }
 
     public static void setOverlayMinCell(int value) {
-        overlayCellSize = Math.max(1, Math.min(48, value));
-    }
-
-    public static int getConfigCellSize() {
-        return configCellSize;
-    }
-
-    public static void setConfigCellSize(int value) {
-        configCellSize = Math.max(2, Math.min(48, value));
+        overlayMinCell = Math.max(1, Math.min(12, value));
     }
 
     // Configscreen tuning (UI)

@@ -1,0 +1,368 @@
+package dev.fweigel.ui;
+
+import dev.fweigel.MapCoverageManager;
+import dev.fweigel.MapCoverageTracker;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+
+import com.mojang.blaze3d.platform.NativeImage;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+public final class CoverageMapRenderer {
+    public static final int GRID_MARGIN = 12;
+
+    // Mer lesbart (på 1440p/4K spesielt)
+    public static final int GRID_MAX_CELL = 48;
+    public static final int GRID_MIN_CELL = 2;
+
+    // Config-screen trenger større ruter for lesbarhet
+    public static final int GRID_MIN_CELL_CONFIG = 6;
+
+    private static final CachedGridTexture GRID_CACHE = new CachedGridTexture();
+
+    private CoverageMapRenderer() {}
+
+    public record GridLayout(
+            MapCoverageManager.CoverageGrid grid,
+            int startX,
+            int startY,
+            int cellSize,
+            int columns,
+            int rows,
+            int gxMin,
+            int gzMin,
+            int gridWidth,
+            int gridHeight,
+            int legendSpace
+    ) {
+        public boolean contains(double mouseX, double mouseY) {
+            return mouseX >= startX && mouseX < startX + gridWidth
+                    && mouseY >= startY && mouseY < startY + gridHeight;
+        }
+
+        public int cellGX(double mouseX) {
+            return  (int) ((mouseX - startX) / (cellSize + (cellSize >= 6 ? 1 : 0)));
+        }
+
+        public int cellGZ(double mouseY) {
+            return  (int) ((mouseY - startY) / (cellSize + (cellSize >= 6 ? 1 : 0)));
+        }
+    }
+
+    public static GridLayout computeLayout(Font font, int panelLeft, int panelTop, int panelRight, int panelBottom,
+                                          boolean drawLegend) {
+        if (!MapCoverageManager.hasTarget()) return null;
+
+        BlockPos start = MapCoverageManager.getTargetStart();
+        BlockPos end = MapCoverageManager.getTargetEnd();
+        if (start == null || end == null) return null;
+
+        MapCoverageManager.CoverageGrid grid = MapCoverageManager.getCoverageGrid(start, end);
+        if (grid == null) return null;
+
+        int columns = grid.columns();
+        int rows = grid.rows();
+
+        int coverageTextHeight = font.lineHeight;
+        int legendSpace = drawLegend ? 24 : 0;
+        int reservedBottomSpace = coverageTextHeight + 8 + legendSpace;
+
+        int availableWidth = panelRight - panelLeft - GRID_MARGIN;
+        int availableHeight = panelBottom - panelTop - GRID_MARGIN - reservedBottomSpace;
+        if (availableWidth <= 0 || availableHeight <= 0) return null;
+
+        double fittedCell = Math.min((double) availableWidth / columns, (double) availableHeight / rows);
+
+        int maxCell = GRID_MAX_CELL;
+        if (columns * rows > 2500) maxCell = 28;
+
+        int cellSize = (int) Math.floor(Math.min(maxCell, fittedCell));
+        int minCell = drawLegend ? GRID_MIN_CELL_CONFIG : MapCoverageManager.getOverlayMinCell();
+
+        cellSize = Math.max(minCell, cellSize);
+
+        int gridWidth = (cellSize + (cellSize >= 6 ? 1 : 0)) * columns;
+        int gridHeight = (cellSize + (cellSize >= 6 ? 1 : 0)) * rows;
+        int startX = panelLeft + (availableWidth - gridWidth) / 2;
+        int startY = panelTop + (availableHeight - gridHeight) / 2;
+
+        return new GridLayout(grid, startX, startY, cellSize, columns, rows,
+                grid.gxMin(), grid.gzMin(), gridWidth, gridHeight, legendSpace);
+    }
+
+    public record CellHit(int xStart, int zStart, int worldGX, int worldGZ, boolean mapped, Integer mapId) {
+    public int centerX() { return xStart + MapCoverageManager.MAP_TILE_RADIUS; }
+    public int centerZ() { return zStart + MapCoverageManager.MAP_TILE_RADIUS; }
+}
+
+
+    public static CellHit hitTestCell(Font font, int panelLeft, int panelTop, int panelRight, int panelBottom,
+
+
+                                      double mouseX, double mouseY, boolean drawLegend) {
+        GridLayout layout = computeLayout(font, panelLeft, panelTop, panelRight, panelBottom, drawLegend);
+        if (layout == null || !layout.contains(mouseX, mouseY)) return null;
+
+        int gx = layout.cellGX(mouseX);
+        int gz = layout.cellGZ(mouseY);
+        if (gx < 0 || gx >= layout.columns() || gz < 0 || gz >= layout.rows()) return null;
+
+        int worldGX = layout.gxMin() + gx;
+        int worldGZ = layout.gzMin() + gz;
+
+        int xStart = MapCoverageManager.gridIndexToStart(worldGX);
+        int zStart = MapCoverageManager.gridIndexToStart(worldGZ);
+
+        boolean mapped = layout.grid().isMappedAt(worldGX, worldGZ);
+        Integer mapId = layout.grid().getMapIdAt(worldGX, worldGZ);
+
+        return new CellHit(xStart, zStart, worldGX, worldGZ, mapped, mapId);
+    }
+
+    public static void render(GuiGraphics graphics, Minecraft minecraft, Font font, int panelLeft, int panelTop,
+                              int panelRight, int panelBottom, int mouseX, int mouseY, boolean drawLegend,
+                              boolean enableTooltip) {
+
+        if (!MapCoverageManager.hasTarget()) {
+            // Litt dempet bakplate kun når vi viser tom state i config
+            if (drawLegend) {
+            graphics.fill(panelLeft - 2, panelTop - 2, panelRight + 2, panelBottom + 2, 0x22000000);
+        }
+            graphics.drawCenteredString(font,
+                    "Enter coordinates and press Cartograph to see coverage",
+                    (panelLeft + panelRight) / 2,
+                    (panelTop + panelBottom) / 2,
+                    0xFFFFFF);
+            return;
+        }
+
+        GridLayout layout = computeLayout(font, panelLeft, panelTop, panelRight, panelBottom, drawLegend);
+        if (layout == null) return;
+
+        int startX = layout.startX();
+        int startY = layout.startY();
+        int cellSize = layout.cellSize();
+        int columns = layout.columns();
+        int rows = layout.rows();
+
+        // ✅ Bakgrunn: tett rundt grid, ikke en gigantisk “panel” som gjør overlayen uklar
+        // Mer opaque i config, mer transparent i overlay (drawLegend=false)
+        int bg = drawLegend ? 0x55000000 : 0x55000000;
+        graphics.fill(startX - 3, startY - 3, startX + layout.gridWidth() + 3, startY + layout.gridHeight() + 3, bg);
+
+        List<Component> hoveredTooltip = null;
+
+        int mappedCount = layout.grid().mappedCount();
+        int totalAreas = layout.grid().totalCount();
+
+        GRID_CACHE.ensureUpToDate(minecraft, layout.grid(), cellSize, !drawLegend);
+        if (GRID_CACHE.hasTexture()) {
+            graphics.blit(RenderPipelines.GUI_TEXTURED, GRID_CACHE.textureId, startX, startY, 0, 0,
+                    GRID_CACHE.width, GRID_CACHE.height, GRID_CACHE.width, GRID_CACHE.height);
+        }
+
+        if (enableTooltip) {
+            CellHit hit = hitTestCell(font, panelLeft, panelTop, panelRight, panelBottom,
+                    mouseX, mouseY, drawLegend);
+            if (hit != null) {
+                hoveredTooltip = buildCellTooltip(hit.xStart(), hit.zStart(), hit.mapped(), hit.mapId());
+            }
+        }
+
+        drawPlayerMarker(graphics, minecraft, startX, startY, cellSize, layout.gxMin(), layout.gzMin(), columns, rows);
+
+        double coveragePercent = totalAreas > 0 ? (mappedCount * 100.0) / totalAreas : 0.0;
+        String coverageText = String.format("Covered: %d/%d (%.2f%%)", mappedCount, totalAreas, coveragePercent);
+        int coverageTextWidth = font.width(coverageText);
+
+        int textX = startX + 6;
+        int textY = startY + layout.gridHeight() + 8;
+        // Liten plate bak teksten, men bare der
+        graphics.fill(textX - 3, textY - 3, textX + coverageTextWidth + 3, textY + font.lineHeight + 3, 0x55000000);
+        graphics.drawString(font, coverageText, textX, textY, 0xFFFFFFFF);
+
+        if (drawLegend) {
+            graphics.drawString(font,
+                    MapCoverageManager.MAP_TILE_SIZE + "x" + MapCoverageManager.MAP_TILE_SIZE + " block tiles",
+                    panelLeft + 6, panelTop + 16, 0xFFFFFF);
+            graphics.drawString(font, "Green = mapped", startX, textY + font.lineHeight + 8, 0x00FF66);
+            graphics.drawString(font, "Red = unmapped", startX, textY + font.lineHeight + 20, 0xFF5555);
+        }
+
+        if (enableTooltip && hoveredTooltip != null) {
+            graphics.setTooltipForNextFrame(font, hoveredTooltip, Optional.empty(), mouseX, mouseY);
+        }
+    }
+
+
+    // Backwards-compatible overload (MapConfigScreen bruker denne signaturen)
+    public static CellHit hitTestCell(Minecraft minecraft, Font font,
+                                      int panelLeft, int panelTop, int panelRight, int panelBottom,
+                                      double mouseX, double mouseY, boolean drawLegend) {
+        return hitTestCell(font, panelLeft, panelTop, panelRight, panelBottom, mouseX, mouseY, drawLegend);
+    }
+
+    private static void drawPlayerMarker(GuiGraphics graphics, Minecraft minecraft, int startX, int startY, int cellSize,
+                                         int gxMin, int gzMin, int columns, int rows) {
+        if (minecraft == null) return;
+        Player player = minecraft.player;
+        if (player == null) return;
+
+        int playerGX = MapCoverageManager.toGridIndex((int) Math.floor(player.getX()));
+        int playerGZ = MapCoverageManager.toGridIndex((int) Math.floor(player.getZ()));
+        int relativeGX = playerGX - gxMin;
+        int relativeGZ = playerGZ - gzMin;
+
+        if (relativeGX < 0 || relativeGX >= columns || relativeGZ < 0 || relativeGZ >= rows) return;
+
+        int iconSize = Math.max(8, Math.min(cellSize, 18));
+        int drawX = startX + relativeGX * cellSize + (cellSize - iconSize) / 2;
+        int drawY = startY + relativeGZ * cellSize + (cellSize - iconSize) / 2;
+
+        var poseStack = graphics.pose();
+        poseStack.pushMatrix();
+        poseStack.translate(drawX, drawY);
+        float scale = iconSize / 16.0f;
+        poseStack.scale(scale, scale);
+        graphics.renderItem(new ItemStack(Items.COMPASS), 0, 0);
+        poseStack.popMatrix();
+    }
+
+    public static List<Component> buildCellTooltip(int xStart, int zStart, boolean mapped, Integer mapId) {
+        List<Component> tooltip = new ArrayList<>();
+        tooltip.add(Component.literal(String.format("X: %d to %d", xStart, xStart + MapCoverageManager.MAP_TILE_SIZE - 1)));
+        tooltip.add(Component.literal(String.format("Z: %d to %d", zStart, zStart + MapCoverageManager.MAP_TILE_SIZE - 1)));
+
+        if (mapped) {
+            String status = "Mapped";
+            if (mapId != null) status += String.format(" (Map ID: %d)", mapId);
+            tooltip.add(Component.literal(status));
+        } else {
+            tooltip.add(Component.literal("Not mapped"));
+        }
+        return tooltip;
+    }
+
+    private static final class CachedGridTexture {
+        private static final int COLOR_MAPPED = 0xAA00CC66;
+        private static final int COLOR_UNMAPPED = 0xAACC1111;
+        private static final int COLOR_OUTLINE = 0x99000000;
+
+        private Identifier textureId;
+        private DynamicTexture texture;
+        private int width;
+        private int height;
+        private int cellSize;
+        private boolean forceGapMode;
+          private MapCoverageManager.CoverageGrid grid;
+
+        private boolean needsRebuild(MapCoverageManager.CoverageGrid grid, int cellSize, boolean forceGapMode) {
+              return this.grid != grid || this.cellSize != cellSize || this.forceGapMode != forceGapMode;
+          }
+
+        private boolean needsTextureResize(MapCoverageManager.CoverageGrid grid, int cellSize) {
+            int nextWidth = grid.columns() * (cellSize + (cellSize >= 6 ? 1 : 0));
+            int nextHeight = grid.rows() * (cellSize + (cellSize >= 6 ? 1 : 0));
+            return nextWidth != width || nextHeight != height;
+        }
+
+        private boolean hasTexture() {
+            return texture != null && textureId != null && width > 0 && height > 0;
+        }
+
+        private void ensureUpToDate(Minecraft minecraft, MapCoverageManager.CoverageGrid grid, int cellSize, boolean forceGapMode) {
+            if (minecraft == null || grid == null) return;
+
+            boolean rebuild = needsRebuild(grid, cellSize, forceGapMode);
+            boolean resize = needsTextureResize(grid, cellSize);
+            if (!rebuild && !resize) return;
+
+            this.grid = grid;
+            this.cellSize = cellSize;
+              this.forceGapMode = forceGapMode;
+              this.width = grid.columns() * (cellSize + (cellSize >= 6 ? 1 : 0));
+            this.height = grid.rows() * (cellSize + (cellSize >= 6 ? 1 : 0));
+
+            NativeImage image = new NativeImage(width, height, false);
+            fillImage(image, grid, cellSize, forceGapMode);
+
+            if (texture == null || resize) {
+                if (texture != null) texture.close();
+                texture = new DynamicTexture(() -> "coverage_grid", image);
+                textureId = Identifier.fromNamespaceAndPath(MapCoverageTracker.MOD_ID, "coverage_grid");
+                minecraft.getTextureManager().register(textureId, texture);
+            } else {
+                texture.setPixels(image);
+            }
+            texture.upload();
+        }
+
+        private void fillImage(NativeImage image, MapCoverageManager.CoverageGrid grid, int cellSize, boolean forceGapMode) {
+            // Clear hele bildet til transparent (hindrer "glitch"/søppel i gap-kolonner/rader)
+            for (int y = 0; y < image.getHeight(); y++) {
+                for (int x = 0; x < image.getWidth(); x++) {
+                    image.setPixelABGR(x, y, 0x00000000);
+                }
+            }
+
+            int mappedColor = toAbgr(COLOR_MAPPED);
+            int unmappedColor = toAbgr(COLOR_UNMAPPED);
+            int outlineColor = toAbgr(COLOR_OUTLINE);
+
+            // ✅ Gap/outline for bedre lesbarhet
+            int gap = (forceGapMode || cellSize >= 6) ? 1 : 0;
+            int innerStart = gap;
+            int innerEnd = cellSize - gap; // eksklusiv
+
+            for (int gz = 0; gz < grid.rows(); gz++) {
+                for (int gx = 0; gx < grid.columns(); gx++) {
+                    boolean mapped = grid.isMappedAt(grid.gxMin() + gx, grid.gzMin() + gz);
+                    int fillColor = mapped ? mappedColor : unmappedColor;
+
+                    int pixelStartX = gx * (cellSize + (cellSize >= 6 ? 1 : 0));
+                    int pixelStartY = gz * (cellSize + (cellSize >= 6 ? 1 : 0));
+
+                    for (int y = 0; y < cellSize; y++) {
+                        int pixelY = pixelStartY + y;
+                        for (int x = 0; x < cellSize; x++) {
+                            int pixelX = pixelStartX + x;
+
+                            // Gap: la bakgrunnen skinne igjennom mellom celler
+                            boolean inside = (x >= innerStart && x < innerEnd && y >= innerStart && y < innerEnd);
+                            if (!inside) {
+                                image.setPixelABGR(pixelX, pixelY, 0x00000000);
+                                continue;
+                            }
+
+                            boolean isOutline = cellSize > 2 && (
+                                    x == innerStart || y == innerStart || x == innerEnd - 1 || y == innerEnd - 1
+                            );
+
+                            int color = isOutline ? outlineColor : fillColor;
+                            image.setPixelABGR(pixelX, pixelY, color);
+                        }
+                    }
+                }
+            }
+        }
+
+        private static int toAbgr(int argb) {
+            int a = (argb >> 24) & 0xFF;
+            int r = (argb >> 16) & 0xFF;
+            int g = (argb >> 8) & 0xFF;
+            int b = argb & 0xFF;
+            return (a << 24) | (b << 16) | (g << 8) | r;
+        }
+    }
+}

@@ -11,14 +11,21 @@ public record MapCoverageState(PositionData targetStart,
                                PositionData targetEnd,
                                boolean overlayEnabled,
                                Set<Long> mappedAreas,
+                               Set<Long> forcedMappedAreas,
                                Map<Long, Integer> mapIds) {
+    public static int configCellSize = 5;
+
+    // Cell size used by on-screen overlay (separate from config screen)
+    public static int overlayCellSize = 3;
+
 
     public MapCoverageState() {
-        this(null, null, false, new HashSet<>(), new HashMap<>());
+        this(null, null, false, new HashSet<>(), new HashSet<>(), new HashMap<>());
     }
 
     public MapCoverageState {
         mappedAreas = mappedAreas == null ? new HashSet<>() : new HashSet<>(mappedAreas);
+        forcedMappedAreas = forcedMappedAreas == null ? new HashSet<>() : new HashSet<>(forcedMappedAreas);
         mapIds = mapIds == null ? new HashMap<>() : new HashMap<>(mapIds);
     }
 
@@ -34,14 +41,19 @@ public record MapCoverageState(PositionData targetStart,
         return new HashSet<>(mappedAreas);
     }
 
+    public Set<Long> forcedMappedAreasCopy() {
+        return new HashSet<>(forcedMappedAreas);
+    }
+
     public Map<Long, Integer> mapIdsCopy() {
         return new HashMap<>(mapIds);
     }
 
     public static MapCoverageState snapshotFrom(BlockPos start, BlockPos end, boolean overlayEnabled,
-                                                Set<Long> mappedAreas, Map<Long, Integer> mapIds) {
+                                                Set<Long> mappedAreas, Set<Long> forcedMappedAreas,
+                                                Map<Long, Integer> mapIds) {
         return new MapCoverageState(PositionData.fromBlockPos(start), PositionData.fromBlockPos(end),
-                overlayEnabled, mappedAreas, mapIds);
+                overlayEnabled, mappedAreas, forcedMappedAreas, mapIds);
     }
 
     public record PositionData(int x, int z) {

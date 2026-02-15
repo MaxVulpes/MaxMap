@@ -14,4 +14,13 @@
 
 Ever started a huge mapping project and then lost track of which 128×128 “map squares” you’ve already covered?
 
-**MaxMap** keeps a clean overlay of your map-coverage grid — and can automatically create, fill, and organize maps as you explore.
+![MaxMap](src/main/resources/assets/maxmap/minecraft_title.png)
+
+MaxMap is a fork/continuation of Map Coverage Tracker with extra quality-of-life features:
+- Coverage overlay for 128×128 map tiles
+- Auto-map mode (creates + inspects maps, then moves them to main inventory)
+- HUD indicator + red warning when inventory is full
+
+Credits:
+- Original project: fweigel-dev / MapCoverageTracker
+

@@ -1,7 +1,7 @@
-package dev.maxvulpes.maxmap;
+package maxvulpes.maxmap;
 
-import dev.maxvulpes.maxmap.ui.MapConfigScreen;
-import dev.maxvulpes.maxmap.ui.MapOverlayRenderer;
+import maxvulpes.maxmap.ui.MapConfigScreen;
+import maxvulpes.maxmap.ui.MapOverlayRenderer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;

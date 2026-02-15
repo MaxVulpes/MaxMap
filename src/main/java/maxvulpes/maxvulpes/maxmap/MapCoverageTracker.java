@@ -1,4 +1,4 @@
-package dev.maxvulpes.maxmap;
+package maxvulpes.maxmap;
 
 import net.fabricmc.api.ModInitializer;
 

@@ -15,10 +15,10 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"dev.maxvulpes.maxmap.MapCoverageTracker"
+			"maxvulpes.maxmap.MaxMap"
 		],
 		"client": [
-			"dev.maxvulpes.maxmap.MapCoverageTrackerClient"
+			"maxvulpes.maxmap.MaxMapClient"
 		]
 	},
 	"mixins": [

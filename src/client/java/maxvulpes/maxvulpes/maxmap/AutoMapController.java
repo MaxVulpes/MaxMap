@@ -1,4 +1,4 @@
-package dev.maxvulpes.maxmap;
+package maxvulpes.maxmap;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;

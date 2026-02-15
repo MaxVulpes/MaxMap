@@ -1,8 +1,8 @@
-package dev.maxvulpes.maxmap.ui;
+package maxvulpes.maxmap.ui;
 
-import dev.maxvulpes.maxmap.MapCoverageManager;
-import dev.maxvulpes.maxmap.MapCoverageState;
-import dev.maxvulpes.maxmap.MapCoverageTracker;
+import maxvulpes.maxmap.MapCoverageManager;
+import maxvulpes.maxmap.MapCoverageState;
+import maxvulpes.maxmap.MapCoverageTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;

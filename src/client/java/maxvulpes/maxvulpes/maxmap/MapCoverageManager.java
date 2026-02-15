@@ -1,4 +1,4 @@
-package dev.maxvulpes.maxmap;
+package maxvulpes.maxmap;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;

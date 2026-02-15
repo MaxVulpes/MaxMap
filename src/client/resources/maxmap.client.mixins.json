@@ -1,6 +1,6 @@
 {
         "required": true,
-        "package": "maxvulpes.maxmap.mixin.client",
+        "package": "dev.maxvulpes.maxmap.mixin.client",
         "compatibilityLevel": "JAVA_21",
         "client": [
                 "MapDiscoveryMixin",

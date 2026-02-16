@@ -1,7 +1,7 @@
 {
 	"schemaVersion": 1,
 	"id": "maxmap",
-	"version": "${version}",
+	"version": "0.1.2",
 	"name": "MaxMap",
   "authors": ["MaxVulpes"],
 	"description": "Tracks 128x128 map coverage and visualizes it.",

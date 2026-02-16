@@ -177,8 +177,8 @@ int xStart = MapCoverageManager.gridIndexToStart(worldGX);
         }
 if (drawLegend) {
             graphics.drawString(font, MapCoverageManager.MAP_TILE_SIZE + "x" + MapCoverageManager.MAP_TILE_SIZE + " block tiles", panelLeft + 4, panelTop + 16, 0xFFFFFF);
-            graphics.drawString(font, "Green = mapped", startX, panelBottom - 24, 0x00FF66);
-            graphics.drawString(font, "Red = unmapped", startX, panelBottom - 12, 0xFF5555);
+            graphics.drawString(font, "Green = mapped", startX, panelBottom - 24, 0xFF29916B);
+            graphics.drawString(font, "Red = unmapped", startX, panelBottom - 12, 0xFFAF2235);
         }
 
         if (enableTooltip && hoveredTooltip != null) {
@@ -237,9 +237,9 @@ if (drawLegend) {
     }
 
     private static final class CachedGridTexture {
-        private static final int COLOR_MAPPED = 0xAA00CC66;
-        private static final int COLOR_UNMAPPED = 0xAACC1111;
-        private static final int COLOR_OUTLINE = 0x66000000;
+        private static final int COLOR_MAPPED   = 0xFF29916B; // teal/cyan, roligere
+        private static final int COLOR_UNMAPPED = 0xFFAF2235; // wine/blood red
+        private static final int COLOR_OUTLINE  = 0x99000000; // litt mindre transparent outline
 
         private Identifier textureId;
         private DynamicTexture texture;

@@ -124,11 +124,10 @@ List<Component> hoveredTooltip = null;
 
         GRID_CACHE.ensureUpToDate(minecraft, grid, cellSize);
         if (GRID_CACHE.hasTexture()) {
-            graphics.blit(RenderPipelines.GUI_TEXTURED, GRID_CACHE.textureId, startX, startY, 0, 0,
-                    GRID_CACHE.width, GRID_CACHE.height, GRID_CACHE.width, GRID_CACHE.height);
-        }
-
-        if (enableTooltip
+            graphics.blit(RenderPipelines.GUI_TEXTURED, GRID_CACHE.textureId, startX, startY, 1, 1,
+                    gridWidth, gridHeight, GRID_CACHE.width, GRID_CACHE.height);
+}
+if (enableTooltip
                 && mouseX >= startX
                 && mouseX < startX + gridWidth
                 && mouseY >= startY
@@ -235,7 +234,6 @@ if (drawLegend) {
         }
         return tooltip;
     }
-
     private static final class CachedGridTexture {
         private static final int COLOR_MAPPED   = 0xFF29916B; // teal/cyan, roligere
         private static final int COLOR_UNMAPPED = 0xFFAF2235; // wine/blood red
@@ -253,8 +251,8 @@ if (drawLegend) {
         }
 
         private boolean needsTextureResize(MapCoverageManager.CoverageGrid grid, int cellSize) {
-            int nextWidth = grid.columns() * cellSize;
-            int nextHeight = grid.rows() * cellSize;
+            int nextWidth = grid.columns() * cellSize + 2;
+            int nextHeight = grid.rows() * cellSize + 2;
             return nextWidth != width || nextHeight != height;
         }
 
@@ -274,8 +272,8 @@ if (drawLegend) {
 
             this.grid = grid;
             this.cellSize = cellSize;
-            this.width = grid.columns() * cellSize;
-            this.height = grid.rows() * cellSize;
+            this.width = grid.columns() * cellSize + 2;
+            this.height = grid.rows() * cellSize + 2;
 
             NativeImage image = new NativeImage(width, height, false);
             fillImage(image, grid, cellSize);
@@ -287,7 +285,7 @@ if (drawLegend) {
                 texture = new DynamicTexture(() -> "coverage_grid", image);
                 textureId = Identifier.fromNamespaceAndPath(MaxMap.MOD_ID, "coverage_grid");
                 minecraft.getTextureManager().register(textureId, texture);
-            } else {
+} else {
                 texture.setPixels(image);
             }
             texture.upload();
@@ -296,21 +294,22 @@ if (drawLegend) {
         private void fillImage(NativeImage image, MapCoverageManager.CoverageGrid grid, int cellSize) {
             int mappedColor = toAbgr(COLOR_MAPPED);
             int unmappedColor = toAbgr(COLOR_UNMAPPED);
-            int outlineColor = toAbgr(cellSize == 3 ? 0xAA000000 : COLOR_OUTLINE);
+            int outlineColor = toAbgr(cellSize == 3 ? 0xFF000000 : COLOR_OUTLINE);
 
             for (int gz = 0; gz < grid.rows(); gz++) {
                 for (int gx = 0; gx < grid.columns(); gx++) {
                     boolean mapped = grid.isMappedAt(grid.gxMin() + gx, grid.gzMin() + gz);
                     int fillColor = mapped ? mappedColor : unmappedColor;
-                    int pixelStartX = gx * cellSize;
-                    int pixelStartY = gz * cellSize;
+                    int pixelStartX = 1 + gx * cellSize;
+                    int pixelStartY = 1 + gz * cellSize;
 
                     for (int y = 0; y < cellSize; y++) {
                         int pixelY = pixelStartY + y;
                         for (int x = 0; x < cellSize; x++) {
                             int pixelX = pixelStartX + x;
-                            boolean isOutline = (cellSize >= 4 || cellSize == 3)
-                                    && (x == 0 || y == 0 || x == cellSize - 1 || y == cellSize - 1);
+                            boolean isOutline = (cellSize >= 4)
+                                    ? (x == 0 || y == 0 || x == cellSize - 1 || y == cellSize - 1)
+                                    : (cellSize == 3 && (x == 0 || y == 0));
                             int color = isOutline ? outlineColor : fillColor;
                             image.setPixelABGR(pixelX, pixelY, color);
                         }

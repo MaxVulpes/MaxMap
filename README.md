@@ -74,7 +74,9 @@ Inside the MaxMap config screen you can:
 
 ## 📸 Screenshots
 
-*(Add screenshots here)*
+<img width="2560" height="1440" alt="2026-02-16_05 15 46" src="https://github.com/user-attachments/assets/3c9fa527-ebc1-4811-8741-37e32a82e7fa" />
+<img width="2560" height="1440" alt="2026-02-16_05 16 07" src="https://github.com/user-attachments/assets/c7ae4363-fc4d-41d5-baf3-ca04fb0014c8" />
+
 
 ---
 
